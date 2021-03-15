@@ -6,7 +6,7 @@
         draggable="true"
         @dragstart="dragstart"
       >
-        矩形
+        
       </div>
     </div>
     <main
