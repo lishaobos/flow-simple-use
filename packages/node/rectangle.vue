@@ -9,7 +9,6 @@
     </div>
     <div
       class="point"
-      v-show="isInElement"
       v-for="(item, index) in Object.values(graphNode.pointMap)"
       :key="index"
       :style="item.style"
@@ -43,10 +42,10 @@ export default defineComponent({
         const el = (instance as any).ctx.$el as HTMLElement
 
         const pointList = reactive<Point[]>([
-            { id: '1', el, sideEl: null, side: 1, style: { top: '-5px', left: '50%' }, lineList: [] },
-            { id: '4', el, sideEl: null, side: 2, style: { right: '-5px', top: '50%' }, lineList: [] },
-            { id: '2', el, sideEl: null, side: 3, style: { bottom: '-5px', left: '50%' }, lineList: [] },
-            { id: '3', el, sideEl: null, side: 4, style: { left: '-5px', top: '50%' }, lineList: [] },
+            { id: '1', el, sideEl: null, side: 1, style: { top: '-10px', left: '50%' }, lineList: [] },
+            { id: '2', el, sideEl: null, side: 2, style: { right: '-10px', top: '50%' }, lineList: [] },
+            { id: '3', el, sideEl: null, side: 3, style: { bottom: '-10px', left: '50%' }, lineList: [] },
+            { id: '4', el, sideEl: null, side: 4, style: { left: '-10px', top: '50%' }, lineList: [] },
         ])
 
         props.graphNode.setPointList(pointList)

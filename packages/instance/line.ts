@@ -92,10 +92,11 @@ import {
         const el = this.el as HTMLCanvasElement
         const pd = w + 10
 
+        console.log(this.isCrash)
         const width = (crashWidth || Math.abs(x - x2)) + 2 * pd
         const height = (crashHeight || Math.abs(y - y2)) + 2 * pd
         const top = Math.min(y, y2) - y1 - pd
-        const left = Math.min(x, x2) - x1 - pd
+        const left = (Math.min(x, x2, ) - x1 - pd)
       
         el.width = width
         el.height = height
@@ -117,19 +118,10 @@ import {
         const { x: x2, y: y2 } = this?.end?.sideEl?.getBoundingClientRect() || e as MouseEvent
         const entryPoint: Point = [x1, y1]
         const exitPoint: Point = [x2, y2]
-  
-        const startPoint = getPoint(entryPoint, this.start.side)
-        const endPoint = getPoint(exitPoint, this?.end?.side || 1)
-        const points = this.calculatePoint(startPoint, endPoint)
-  
-        const pointList = [
-            entryPoint,
-            ...points,
-            exitPoint
-        ]
+        const points = this.calculatePoint(entryPoint, exitPoint)
   
         if(e) this.setElStyle(e)
-        this.paint(pointList.map( p => [p[0] - x, p[1] - y]))
+        this.paint(points.map( p => [p[0] - x, p[1] - y]))
     }
   
     paint(list: Point[]) {
@@ -146,9 +138,19 @@ import {
         ctx.save()
     }
   
-    calculatePoint(start: Point, end: Point) {
+      calculatePoint(entry: Point, exit: Point) {
+        const start = getPoint(entry, this.start.side)
+        const end = getPoint(exit, this?.end?.side || 1)
+        const xClose = Math.abs(entry[0] - exit[0]) < (2 * w)
+        const yClose = Math.abs(entry[1] - exit[1]) < (2 * w)
+        const points: Point[] = []
+
+        // if (xClose || yClose) {
+        //     start = entry
+        //     end = exit
+        // }
+        
         this.isCrash = 0
-        const points: Point[] = [start]
         const vectorHorizontal: Point = [end[0] - start[0], 0]
         const vectorVertical: Point = [0, end[1] - start[1]]
         const startDirection = this.getDirection(
@@ -161,11 +163,11 @@ import {
             minus(vectorVertical),
             isParallel(this.exitDirection, [0, 1]) ? minus(this.exitDirection) : this.exitDirection
         )
-  
+        
         if (isParallel(startDirection, endDirection)) {
             this.isMorePoint = true
-            const x = (end[0] + start[0]) / 2
-            const y = (end[1] + start[1]) / 2
+            const x = (entry[0] + exit[0]) / 2
+            const y = (entry[1] + exit[1]) / 2
             const isVertical = isParallel([0, 1], startDirection)
             
             if (isVertical) {
@@ -178,20 +180,26 @@ import {
             this.isMorePoint = false
             points.push(add(startDirection, start))
         }
+          
+        points.unshift(entry, start)
+        points.push(end, exit)
+
+        if (this.end) {
+            const line = this.getCrashLine(points, [this.start, this.end as NodePoint])
+            if (line) {
+                const noCrashPoints = this.getNoCrashPoints(points, line, 'max')
+                if (this.getCrashLine(noCrashPoints, [this.start, this.end as NodePoint])) {
+                    return  this.getNoCrashPoints(points, line, 'min')
+                }
+                
+                return noCrashPoints
+            }
+        }
         
-        points.push(end)
-  
-        // if (this.end) {
-        //     const line = this.getCrashLine(points, [this.start, this.end as NodePoint])
-        //     if (line) {
-        //         return this.getNoCrashPoints(points, line)
-        //     }
-        // }
-  
         return points
     }
   
-    getNoCrashPoints(points: Point[], line: Line): Point[] {
+    getNoCrashPoints(points: Point[], line: Line, calc: ('max' | 'min') = 'max'): Point[] {
         const vector = minus(line[0], line[1])
         const isVertical = isParallel([0, 1], vector)
   
@@ -205,18 +213,36 @@ import {
         const x4 = x3 + endEl.offsetWidth
         const y4 = y3 + endEl.offsetHeight
   
-        const [[x, y]] = line
-        points.forEach(p => {
-            if (isVertical && p[0] === x) {
-                p[0] = Math.max(x1, x2, x3, x4) + w
+        const [lp1, lp2] = line
+        const isSamePoint = (p1: Point, p2: Point) => p1[0] === p2[0] && p1[1] === p2[1]
+        
+        const pointList = points.map<Point>(p => {
+            let [x, y] = p
+            const wid = calc === 'min' ? (-w) : w
+            if (isSamePoint(lp1, p) || isSamePoint(lp2, p)) {
+                if (isVertical) x = Math[calc](x1, x2, x3, x4) + wid
+                else y = Math[calc](y1, y2, y3, y4) + w
             }
-            
-            if(!isVertical && p[1] === y){
-                p[1] = Math.max(y1, y2, y3, y4) + w
-            }
+
+            return [x, y]
         })
-  
-        return points
+
+        // console.log(points, line)
+        const arr: Point[] = []
+        pointList.reduce((p, c) => {
+            if (p[0] !== c[0] && p[1] !== c[1]) {
+                const isTaller = p[1] >= c[1]
+                const x = isTaller ? p[0] : c[0]
+                const y = !isTaller ? p[1] : c[1]
+                arr.push(p, [x, y], c)
+            } else {
+                arr.push(p, c)
+            }
+
+            return c
+        })
+
+        return arr
     }
   
     getCrashLine(points: Point[], nodeList: NodePoint[]): Line | undefined {
@@ -231,6 +257,7 @@ import {
             for (const nodeLine of nodeLineList) {
                 for (const pointLine of lineList) {
                     if (this.isLineCross(nodeLine, pointLine)) {
+                        console.log(pointLine)
                         const vector = minus(pointLine[1], pointLine[0])
                         this.isCrash = isParallel([0, 1], vector) ? 1 : 2
                         return pointLine
