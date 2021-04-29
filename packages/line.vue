@@ -1,5 +1,6 @@
 <template>
     <canvas 
+        ref='el'
         :style="{
             width: `${graphLine.style?.width}px`,
             height: `${graphLine.style?.height}px`,
@@ -11,7 +12,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, PropType, inject, getCurrentInstance } from 'vue'
+import { defineComponent, onMounted, PropType, inject, ref } from 'vue'
 import GraphLine from './instance/line'
 
 interface Main {
@@ -28,19 +29,22 @@ export default defineComponent({
         }
     },
     setup(props) {
+        const el = ref<HTMLCanvasElement | null>(null)
+
         onMounted(() => {
             const graphLine = props.graphLine as GraphLine
-            const instance = getCurrentInstance()
             const main = inject('main') as Main
-            const el = (instance as any).ctx.$el
             
-            graphLine.setEl(el)
+            graphLine.setEl(el.value as HTMLCanvasElement)
             graphLine.setContainerEl(main.value)
 
             main.value.addEventListener('mousemove', e => graphLine.draw(e))
 
         })
 
+        return {
+            el
+        }
     }
 })
 </script>

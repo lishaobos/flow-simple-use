@@ -1,5 +1,6 @@
 <template>
   <div 
+    ref='rectangle'
     class="rectangle"
     @mousemove="isInElement = true"
     @mouseleave="isFocus ? '' : isInElement = false"
@@ -20,7 +21,7 @@
 </template>
 
 <script lang='ts'>
-import { defineComponent, PropType, ref, reactive, getCurrentInstance, onMounted } from 'vue'
+import { defineComponent, PropType, ref, reactive, onMounted } from 'vue'
 import GraphNode, { Point } from './../instance/node'
 
 export default defineComponent({
@@ -36,16 +37,14 @@ export default defineComponent({
     setup(props, ctx) {
       const isFocus = ref(false)
       const isInElement = ref(false)
+      const rectangle = ref<HTMLElement | null>(null)
 
       onMounted( () => {
-        const instance = getCurrentInstance()
-        const el = (instance as any).ctx.$el as HTMLElement
-
         const pointList = reactive<Point[]>([
-            { id: '1', el, sideEl: null, side: 1, style: { top: '-10px', left: '50%' }, lineList: [] },
-            { id: '2', el, sideEl: null, side: 2, style: { right: '-10px', top: '50%' }, lineList: [] },
-            { id: '3', el, sideEl: null, side: 3, style: { bottom: '-10px', left: '50%' }, lineList: [] },
-            { id: '4', el, sideEl: null, side: 4, style: { left: '-10px', top: '50%' }, lineList: [] },
+            { id: '1', el: rectangle.value as HTMLElement, sideEl: null, side: 1, style: { top: '-10px', left: '50%' }, lineList: [] },
+            { id: '2', el: rectangle.value as HTMLElement, sideEl: null, side: 2, style: { right: '-10px', top: '50%' }, lineList: [] },
+            { id: '3', el: rectangle.value as HTMLElement, sideEl: null, side: 3, style: { bottom: '-10px', left: '50%' }, lineList: [] },
+            { id: '4', el: rectangle.value as HTMLElement, sideEl: null, side: 4, style: { left: '-10px', top: '50%' }, lineList: [] },
         ])
 
         props.graphNode.setPointList(pointList)
@@ -59,6 +58,7 @@ export default defineComponent({
 
 
       return {
+        rectangle,
         isFocus,
         isInElement,
         drawLine
