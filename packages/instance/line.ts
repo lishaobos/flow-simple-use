@@ -62,14 +62,14 @@ import {
         const { x: x1, y: y1 } = (this.containerEl as HTMLElement).getBoundingClientRect()
         const { x: x2, y: y2 } = (this.start.sideEl as HTMLElement).getBoundingClientRect()
 
-        let [crashWidth, crashHeight] = [0, 0]
+        let [crashWidth, crashHeight, crashTop, crashLeft] = [0, 0, 0, 0]
   
         if (this.end) {
             const sideEl = this.end.sideEl as HTMLElement
             const { x: x3, y: y3 } = sideEl.getBoundingClientRect()
             x = x3
             y = y3
-
+            
             if (this.isCrash) {
                 const startEl = this.start.el
                 const { x: x4, y: y4 } = startEl.getBoundingClientRect()
@@ -80,23 +80,27 @@ import {
                 const { x: x5, y: y5 } = endEl.getBoundingClientRect()
                 const ew = endEl.offsetWidth
                 const eh = endEl.offsetHeight
+
+                crashTop = Math.min(y4, y5)
+                crashLeft = Math.min(x4, x5)
+                crashWidth = x4 < x5 ? (x5 + ew - x4) : (x4 + sw - x5)
+                crashHeight = y4 < y5 ? (y5 + eh - y4) : (y4 + sh - y5)
   
-                if (this.isCrash === 1) {
-                    crashWidth = x4 < x5 ? (x5 + ew - x4) : (x4 + sw - x5)
-                } else if (this.isCrash === 2) {
-                    crashHeight = y4 < y5 ? (y5 + eh - y4) : (y4 + sh - y5)
-                }
+                // if (this.isCrash === 1) {
+                //     crashWidth = x4 < x5 ? (x5 + ew - x4) : (x4 + sw - x5)
+                // } else if (this.isCrash === 2) {
+                //     crashHeight = y4 < y5 ? (y5 + eh - y4) : (y4 + sh - y5)
+                // }
             }
         }
         
         const el = this.el as HTMLCanvasElement
-        const pd = w + 10
+        const pd = w * 2
 
-        console.log(this.isCrash)
         const width = (crashWidth || Math.abs(x - x2)) + 2 * pd
         const height = (crashHeight || Math.abs(y - y2)) + 2 * pd
-        const top = Math.min(y, y2) - y1 - pd
-        const left = (Math.min(x, x2, ) - x1 - pd)
+        const top = (crashTop || Math.min(y, y2))- y1 - pd
+        const left = (crashLeft || Math.min(x, x2)) - x1 - pd
       
         el.width = width
         el.height = height
@@ -188,7 +192,8 @@ import {
             const line = this.getCrashLine(points, [this.start, this.end as NodePoint])
             if (line) {
                 const noCrashPoints = this.getNoCrashPoints(points, line, 'max')
-                if (this.getCrashLine(noCrashPoints, [this.start, this.end as NodePoint])) {
+                const line1 =  this.getCrashLine(noCrashPoints, [this.start, this.end as NodePoint])
+                if (line1) {
                     return  this.getNoCrashPoints(points, line, 'min')
                 }
                 
@@ -221,7 +226,7 @@ import {
             const wid = calc === 'min' ? (-w) : w
             if (isSamePoint(lp1, p) || isSamePoint(lp2, p)) {
                 if (isVertical) x = Math[calc](x1, x2, x3, x4) + wid
-                else y = Math[calc](y1, y2, y3, y4) + w
+                else y = Math[calc](y1, y2, y3, y4) + wid
             }
 
             return [x, y]
@@ -257,7 +262,7 @@ import {
             for (const nodeLine of nodeLineList) {
                 for (const pointLine of lineList) {
                     if (this.isLineCross(nodeLine, pointLine)) {
-                        console.log(pointLine)
+                        // console.log(pointLine)
                         const vector = minus(pointLine[1], pointLine[0])
                         this.isCrash = isParallel([0, 1], vector) ? 1 : 2
                         return pointLine
