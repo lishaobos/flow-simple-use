@@ -188,15 +188,21 @@ import {
         points.unshift(entry, start)
         points.push(end, exit)
 
-        if (this.end) {
-            const line = this.getCrashLine(points, [this.start, this.end as NodePoint])
-            if (line) {
-                const noCrashPoints = this.getNoCrashPoints(points, line, 'max')
-                const line1 =  this.getCrashLine(noCrashPoints, [this.start, this.end as NodePoint])
-                if (line1) {
-                    return  this.getNoCrashPoints(points, line, 'min')
+          if (this.end) {
+            const lineList = this.getCrashLine(points, [this.start, this.end as NodePoint])
+            // 多个相交线先暂时忽略
+            if (lineList.length === 1) {
+                let noCrashPoints = points
+                const mathArr: ('max' | 'min')[] = ['max', 'min']
+                for (const item of mathArr) {
+                    const calcPoints = this.getNoCrashPoints(points, lineList[0], item)
+                    const crashLineList =  this.getCrashLine(calcPoints, [this.start, this.end as NodePoint])
+                    if (!crashLineList.length) {
+                        noCrashPoints = calcPoints
+                        break
+                    }
                 }
-                
+            
                 return noCrashPoints
             }
         }
@@ -232,44 +238,48 @@ import {
             return [x, y]
         })
 
-        // console.log(points, line)
         const arr: Point[] = []
-        pointList.reduce((p, c) => {
+        arr.push(pointList.reduce((p, c) => {
+            // 缺少拐点, 上上连接
             if (p[0] !== c[0] && p[1] !== c[1]) {
-                const isTaller = p[1] >= c[1]
+                const isTaller = p[1] > c[1]
                 const x = isTaller ? p[0] : c[0]
                 const y = !isTaller ? p[1] : c[1]
-                arr.push(p, [x, y], c)
+                arr.push(p, [x, y])
             } else {
-                arr.push(p, c)
+                arr.push(p)
             }
 
             return c
-        })
+        }))
 
         return arr
     }
   
-    getCrashLine(points: Point[], nodeList: NodePoint[]): Line | undefined {
+    getCrashLine(points: Point[], nodeList: NodePoint[]): Line[]{
         const lineList: Line[] = []
-        points.reduce((p, c) => {
+        // 忽略两头连接点处的碰撞检测
+        points.slice(1, points.length - 1).reduce((p, c) => {
             lineList.push([p, c])
             return c
         })
         
+        const crashLineMap: { [propName: string]: Line } = {}
         for (const n of nodeList) {
             const nodeLineList = this.getLineList(n)
             for (const nodeLine of nodeLineList) {
                 for (const pointLine of lineList) {
                     if (this.isLineCross(nodeLine, pointLine)) {
-                        // console.log(pointLine)
                         const vector = minus(pointLine[1], pointLine[0])
                         this.isCrash = isParallel([0, 1], vector) ? 1 : 2
-                        return pointLine
+                        const key = pointLine.toString()
+                        crashLineMap[key] = pointLine
                     }
                 }
             }
         }
+
+        return Object.values(crashLineMap)
     }
   
     isLineCross(line1: Line, line2: Line): boolean {

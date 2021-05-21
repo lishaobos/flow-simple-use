@@ -3,13 +3,16 @@
     ref='rectangle'
     class="rectangle"
     @mousemove="isInElement = true"
-    @mouseleave="isFocus ? '' : isInElement = false"
+    @mouseleave="isInElement = false"
   >
     <div class="content">
       Rectangle
     </div>
     <div
-      class="point"
+      :class="{
+        'point': true,
+        'point-show': isInElement
+      }"
       v-for="(item, index) in Object.values(graphNode.pointMap)"
       :key="index"
       :style="item.style"
@@ -41,10 +44,10 @@ export default defineComponent({
 
       onMounted( () => {
         const pointList = reactive<Point[]>([
-            { id: '1', el: rectangle.value as HTMLElement, sideEl: null, side: 1, style: { top: '-10px', left: '50%' }, lineList: [] },
-            { id: '2', el: rectangle.value as HTMLElement, sideEl: null, side: 2, style: { right: '-10px', top: '50%' }, lineList: [] },
-            { id: '3', el: rectangle.value as HTMLElement, sideEl: null, side: 3, style: { bottom: '-10px', left: '50%' }, lineList: [] },
-            { id: '4', el: rectangle.value as HTMLElement, sideEl: null, side: 4, style: { left: '-10px', top: '50%' }, lineList: [] },
+            { id: '1', el: rectangle.value as HTMLElement, sideEl: null, side: 1, style: { top: '-5px', left: '50%' }, lineList: [] },
+            { id: '2', el: rectangle.value as HTMLElement, sideEl: null, side: 2, style: { right: '-5px', top: '50%' }, lineList: [] },
+            { id: '3', el: rectangle.value as HTMLElement, sideEl: null, side: 3, style: { bottom: '-5px', left: '50%' }, lineList: [] },
+            { id: '4', el: rectangle.value as HTMLElement, sideEl: null, side: 4, style: { left: '-5px', top: '50%' }, lineList: [] },
         ])
 
         props.graphNode.setPointList(pointList)
@@ -74,12 +77,17 @@ export default defineComponent({
   height: 100%;
   .point {
     position: absolute;
-    width: 6px;
-    height: 6px;
+    width: 10px;
+    height: 10px;
     border: 1px solid;
     border-radius: 50%;
     background-color: #fff;
     cursor: crosshair;
+    box-sizing: border-box;
+    opacity: 0;
+    &.point-show {
+      opacity: 1;
+    }
   }
 }
 
