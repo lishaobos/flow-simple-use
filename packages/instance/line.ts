@@ -113,7 +113,7 @@ import {
         }
     }
   
-      getConnectPoint(node: NodePoint): Point {
+    getConnectPoint(node: NodePoint): Point {
         const side = node.side
         const { x: x1, y: y1, width: w1, height: h1 } = (node.sideEl as HTMLElement).getBoundingClientRect()
         const { x: x2, y: y2, width: w2, height: h2 } = node.el.getBoundingClientRect()
@@ -141,24 +141,43 @@ import {
         this.paint(points.map( p => [p[0] - x, p[1] - y]))
     }
       
-    drawArrows( point: Point) {
+    drawArrows([x, y]: Point) {
         const ctx = this.ctx as CanvasRenderingContext2D
-        this.exitDirection
-        ctx.moveTo(...point)
+        const side = (this.end as NodePoint).side
         
+        let angle = Math.PI / 180
+        if (side === 1) {
+            angle *= 0
+        } else if (side === 3) {
+            angle *= 180
+        } else if (side === 2) {
+            angle *= 90
+        } else if (side === 4) {
+            angle *= -90
+        }
+        
+        const size = 10
+        ctx.translate(x, y)
+        ctx.rotate(angle)
+        ctx.beginPath()
+        ctx.lineTo(-size, -size)
+        ctx.lineTo(0, 0)
+        ctx.lineTo(size, -size)
+        ctx.closePath()
+        ctx.stroke()
+        ctx.fill()
+        ctx.restore()
     }
   
-    paint(list: Point[]) {
+    paint([ac, ...list]: Point[]) {
         const ctx = this.ctx as CanvasRenderingContext2D
         ctx.clearRect(0, 0, 10000, 10000)
         ctx.beginPath()
-  
-        list.forEach((p, i) => {
-            if (i === 0) return ctx.moveTo(p[0], p[1])
-            ctx.lineTo(p[0], p[1])
-        })
-  
+        ctx.moveTo(ac[0], ac[1])
+        list.forEach((p, i) => ctx.lineTo(p[0], p[1]))
         ctx.stroke()
+
+        if (this.end) this.drawArrows(list[list.length - 1])
         ctx.save()
     }
   
