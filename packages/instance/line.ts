@@ -9,7 +9,7 @@ import {
     isParallel,
     minus,
     add,
-    multCross,
+    // multCross,
     product
   } from './../untils'
   import { Point as NodePoint } from './node'
@@ -113,19 +113,39 @@ import {
         }
     }
   
+      getConnectPoint(node: NodePoint): Point {
+        const side = node.side
+        const { x: x1, y: y1, width: w1, height: h1 } = (node.sideEl as HTMLElement).getBoundingClientRect()
+        const { x: x2, y: y2, width: w2, height: h2 } = node.el.getBoundingClientRect()
+
+        if ([1, 3].includes(side)) {
+            if (side === 1) return [x1, y2 - 1]
+
+            return [x1, y2 + h2 + 1]
+        } else {
+            if (side === 2) return [x2 + w2 + 1, y1]
+
+            return [x2 - 1, y1]
+        }
+    }
+      
     draw(e?: MouseEvent) {
-        const startEl = this.start.sideEl as HTMLElement
         const el = this.el as HTMLElement
-  
         const { x, y } = el.getBoundingClientRect()
-        const { x: x1, y: y1 } = startEl.getBoundingClientRect()
-        const { x: x2, y: y2 } = this?.end?.sideEl?.getBoundingClientRect() || e as MouseEvent
-        const entryPoint: Point = [x1, y1]
-        const exitPoint: Point = [x2, y2]
+
+        const entryPoint: Point = this.getConnectPoint(this.start)
+        const exitPoint: Point = this.end ? this.getConnectPoint(this.end) : [(e as MouseEvent).x, (e as MouseEvent).y]
         const points = this.calculatePoint(entryPoint, exitPoint)
   
         if(e) this.setElStyle(e)
         this.paint(points.map( p => [p[0] - x, p[1] - y]))
+    }
+      
+    drawArrows( point: Point) {
+        const ctx = this.ctx as CanvasRenderingContext2D
+        this.exitDirection
+        ctx.moveTo(...point)
+        
     }
   
     paint(list: Point[]) {
@@ -145,8 +165,8 @@ import {
       calculatePoint(entry: Point, exit: Point) {
         const start = getPoint(entry, this.start.side)
         const end = getPoint(exit, this?.end?.side || 1)
-        const xClose = Math.abs(entry[0] - exit[0]) < (2 * w)
-        const yClose = Math.abs(entry[1] - exit[1]) < (2 * w)
+        // const xClose = Math.abs(entry[0] - exit[0]) < (2 * w)
+        // const yClose = Math.abs(entry[1] - exit[1]) < (2 * w)
         const points: Point[] = []
 
         // if (xClose || yClose) {
@@ -240,14 +260,13 @@ import {
 
         const arr: Point[] = []
         arr.push(pointList.reduce((p, c) => {
-            // 缺少拐点, 上上连接
+            arr.push(p)
+            // 缺少拐点, 上上连接情形
             if (p[0] !== c[0] && p[1] !== c[1]) {
                 const isTaller = p[1] > c[1]
                 const x = isTaller ? p[0] : c[0]
                 const y = !isTaller ? p[1] : c[1]
-                arr.push(p, [x, y])
-            } else {
-                arr.push(p)
+                arr.push([x, y])
             }
 
             return c
@@ -258,8 +277,7 @@ import {
   
     getCrashLine(points: Point[], nodeList: NodePoint[]): Line[]{
         const lineList: Line[] = []
-        // 忽略两头连接点处的碰撞检测
-        points.slice(1, points.length - 1).reduce((p, c) => {
+        points.reduce((p, c) => {
             lineList.push([p, c])
             return c
         })
