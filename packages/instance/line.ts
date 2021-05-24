@@ -162,7 +162,7 @@ import {
         ctx.save()
     }
   
-      calculatePoint(entry: Point, exit: Point) {
+    calculatePoint(entry: Point, exit: Point) {
         const start = getPoint(entry, this.start.side)
         const end = getPoint(exit, this?.end?.side || 1)
         // const xClose = Math.abs(entry[0] - exit[0]) < (2 * w)
@@ -261,9 +261,13 @@ import {
         const arr: Point[] = []
         arr.push(pointList.reduce((p, c) => {
             arr.push(p)
-            // 缺少拐点, 上上连接情形
+            // 缺少拐点情形，例如上上，下下
             if (p[0] !== c[0] && p[1] !== c[1]) {
-                const isTaller = p[1] > c[1]
+                let isTaller = p[1] > c[1]
+                if (isSamePoint(this.entryDirection, [0, -1])) {
+                    isTaller = !isTaller
+                }
+                    
                 const x = isTaller ? p[0] : c[0]
                 const y = !isTaller ? p[1] : c[1]
                 arr.push([x, y])
