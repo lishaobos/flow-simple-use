@@ -9,11 +9,13 @@
         top: `${graphNode['coordinate']['1']}px`
     }"
   >
-      <component
+    <Scale :parentId='graphNode.id' />
+
+    <component
         :is='graphNode.name'
         :graphNode='graphNode'
         v-bind="$attrs"
-      />
+    />
   </div>
 </template>
 
@@ -21,6 +23,7 @@
 import { defineComponent, inject, PropType } from 'vue'
 import GraphNode from './../instance/node'
 import Rectangle from './rectangle.vue'
+import Scale from './Scale.vue'
 
 interface Main {
     value: HTMLElement;
@@ -29,7 +32,8 @@ interface Main {
 export default defineComponent({
     inheritAttrs: false,
     components: {
-        Rectangle
+        Rectangle,
+        Scale
     },
     props: {
         graphNode: {

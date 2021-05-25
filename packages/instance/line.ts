@@ -168,7 +168,7 @@ import {
         ctx.fill()
         ctx.restore()
     }
-  
+        
     paint([ac, ...list]: Point[]) {
         const ctx = this.ctx as CanvasRenderingContext2D
         ctx.clearRect(0, 0, 10000, 10000)
