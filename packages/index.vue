@@ -13,7 +13,8 @@
       ref='main'
       class="main"
       @drop='drop'
-      @dragover='e => e.preventDefault()'
+      @dragover.prevent
+      @click="mouseclick"
     >
       <FlowNode
         v-for="(node, index) in nodeList"
@@ -53,8 +54,6 @@ export default defineComponent({
       const nodeList: GraphNode[] = reactive([])
       const lineList: GraphNLine[] = reactive([])
 
-      let currentNode: (GraphNode | null) = null
-
       const dragstart = (e: DragEvent) => {
         (e.dataTransfer as DataTransfer).setData('nodeData', JSON.stringify({
           name: 'Rectangle',
@@ -68,7 +67,18 @@ export default defineComponent({
         if (isCreate) nodeList.push(new GraphNode(name, [x, y]))
       }
 
-      const checkNode = (node: GraphNode) => currentNode = node
+      const checkNode = (node: GraphNode, ctrlKey: boolean) => {
+        node.isFocus = true
+        if (ctrlKey) return 
+
+        nodeList.forEach( item => {
+          if (item !== node) item.isFocus = false
+        })
+      }
+
+      const mouseclick = () => {
+        nodeList.forEach( item => item.isFocus = false)
+      }
 
       const drawLine = (point: NodePoint) => {
         if (currentDrawLine) {
@@ -89,7 +99,8 @@ export default defineComponent({
         dragstart,
         drop,
         checkNode,
-        drawLine
+        drawLine,
+        mouseclick,
       }
     }
 })

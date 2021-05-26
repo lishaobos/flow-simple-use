@@ -4,12 +4,16 @@
     :id='graphNode.id'
     @mousedown="mousedown"
     @mouseup="mouseup"
+    @click.stop="mouseclick"
     :style="{
         left: `${graphNode['coordinate']['0']}px`,
         top: `${graphNode['coordinate']['1']}px`
     }"
   >
-    <Scale :parentId='graphNode.id' />
+
+    <template v-if="graphNode.isFocus">
+        <Scale :parentId='graphNode.id' />
+    </template>
 
     <component
         :is='graphNode.name'
@@ -20,14 +24,11 @@
 </template>
 
 <script lang='ts'>
-import { defineComponent, inject, PropType } from 'vue'
+/* eslint-disable vue/no-mutating-props */
+import { defineComponent, inject, PropType, Ref } from 'vue'
 import GraphNode from './../instance/node'
 import Rectangle from './rectangle.vue'
 import Scale from './Scale.vue'
-
-interface Main {
-    value: HTMLElement;
-}
 
 export default defineComponent({
     inheritAttrs: false,
@@ -44,36 +45,35 @@ export default defineComponent({
         },
     },
     setup(props, ctx) {
-        const main = inject('main')
+        const main = inject('main') as Ref<HTMLElement>
         let coordinate = { x: 0,  y: 0 }
 
         const mousemove = (e: MouseEvent) => {
-            if (!props.graphNode.isMove) return
-            const { left, top } = (main as Main).value.getBoundingClientRect()
+            const { left, top } = main.value.getBoundingClientRect()
             const { x,  y } = e
             props.graphNode.setCoordinate([x - left - coordinate.x, y - top - coordinate.y])
-            // props.graphNode.drawLine(e)
         }
 
         const mouseup = () => {
-            // eslint-disable-next-line vue/no-mutating-props
-            props.graphNode.isMove = false;
-            (main as Main).value.removeEventListener('mousemove', mousemove)
+            main.value.removeEventListener('mousemove', mousemove)
         }
         
         const mousedown = (e: MouseEvent) => {
-            const { offsetX: x, offsetY: y } = e
+            const { offsetX: x, offsetY: y, ctrlKey } = e
             coordinate = { x, y }
-            // eslint-disable-next-line vue/no-mutating-props
-            props.graphNode.isMove = true;
-            (main as Main).value.addEventListener('mousemove', mousemove)
-            ctx.emit('checkNode', ctx)
+            main.value.addEventListener('mousemove', mousemove)
+        }
+
+        const mouseclick = (e: MouseEvent) => {
+            const { offsetX: x, offsetY: y, ctrlKey } = e
+            ctx.emit('checkNode', props.graphNode, ctrlKey)
         }
 
 
         return {
             mouseup,
             mousedown,
+            mouseclick,
         }
     }
 }) 
