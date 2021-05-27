@@ -32,8 +32,12 @@ import {
     entryDirection: Direction = direction[side.top];
     exitDirection: Direction = direction[side.top];
     isMorePoint = false;
+    inPath = false;
+    isFocus = false;
+    focusColor = 'red';
     // 0 未相交 1 垂直相交 2 水平相交
     isCrash: 0 | 1 | 2 = 0;
+    points: Point[] = [];
   
     constructor(node: NodePoint) {
         this.start = node
@@ -46,7 +50,7 @@ import {
         this.ctx = el.getContext('2d') as CanvasRenderingContext2D
     }
   
-    setContainerEl(el: HTMLElement) { 
+    setContainerEl(el: HTMLElement) {
         this.containerEl = el
     }
   
@@ -135,10 +139,38 @@ import {
 
         const entryPoint: Point = this.getConnectPoint(this.start)
         const exitPoint: Point = this.end ? this.getConnectPoint(this.end) : [(e as MouseEvent).x, (e as MouseEvent).y]
-        const points = this.calculatePoint(entryPoint, exitPoint)
+        this.points = this.calculatePoint(entryPoint, exitPoint)
   
-        if(e) this.setElStyle(e)
-        this.paint(points.map( p => [p[0] - x, p[1] - y]))
+        if (e) this.setElStyle(e)
+        this.paint(this.points.map( p => [p[0] - x, p[1] - y]))
+    }
+    
+    blurFocus() {
+      this.isFocus = false
+    }
+
+    mouseCrash({ x, y }: MouseEvent) {
+        this.inPath = false
+        if (!this.end) return
+
+        const lineList = this.getLineList(this.points)
+
+        for (const [[x1, y1], [x2, y2]] of lineList) {
+            if (
+                (y > Math.max(y1, y2) || y < Math.min(y1, y2)) &&
+                (x < Math.min(x1, x2) || x > Math.max(x1, x2))
+            ) continue
+
+            const l1 = Math.sqrt(Math.pow(x - x1, 2) + Math.pow(y - y1, 2))
+            const l2 = Math.sqrt(Math.pow(x - x2, 2) + Math.pow(y - y2, 2))
+            const l3 = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))
+
+            const p = (l1 + l2 + l3) / 2
+            const s = Math.sqrt(p * (p - l1) * (p - l2) * (p - l3))
+            const dis = s * 2 / l3
+
+            if (dis <= 10) return this.inPath = true
+          }
     }
       
     drawArrows([x, y]: Point) {
@@ -159,6 +191,9 @@ import {
         const size = 10
         ctx.translate(x, y)
         ctx.rotate(angle)
+        if (this.inPath || this.isFocus) {
+            ctx.fillStyle = this.focusColor
+        }
         ctx.beginPath()
         ctx.lineTo(-size, -size)
         ctx.lineTo(0, 0)
@@ -175,6 +210,9 @@ import {
         ctx.beginPath()
         ctx.moveTo(ac[0], ac[1])
         list.forEach((p, i) => ctx.lineTo(p[0], p[1]))
+        if (this.inPath || this.isFocus) {
+            ctx.strokeStyle = this.focusColor
+        }
         ctx.stroke()
 
         if (this.end) this.drawArrows(list[list.length - 1])
@@ -297,17 +335,24 @@ import {
 
         return arr
     }
-  
-    getCrashLine(points: Point[], nodeList: NodePoint[]): Line[]{
+    
+    getLineList(points: Point[]): Line[] {
         const lineList: Line[] = []
+
         points.reduce((p, c) => {
             lineList.push([p, c])
             return c
         })
+
+        return lineList
+    }
+  
+    getCrashLine(points: Point[], nodeList: NodePoint[]): Line[]{
+        const lineList = this.getLineList(points)
         
         const crashLineMap: { [propName: string]: Line } = {}
         for (const n of nodeList) {
-            const nodeLineList = this.getLineList(n)
+            const nodeLineList = this.getNodeLineList(n)
             for (const nodeLine of nodeLineList) {
                 for (const pointLine of lineList) {
                     if (this.isLineCross(nodeLine, pointLine)) {
@@ -344,7 +389,7 @@ import {
         return true
     }
   
-    getLineList(node: NodePoint): Line[] {
+    getNodeLineList(node: NodePoint): Line[] {
         const el = node.el
         const { x, y} = el.getBoundingClientRect()
         const w = el.offsetWidth

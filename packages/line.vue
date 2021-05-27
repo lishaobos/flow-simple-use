@@ -7,17 +7,17 @@
             left: `${graphLine.style?.left}px`,
             top: `${graphLine.style?.top}px`,
         }"
-        :class="['graph-line']"
+        :class="{
+            'graph-line': true,
+            'graph-line-cursor': graphLine.inPath
+        }"
+        @click.stop="mouseclick"
     />
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, PropType, inject, ref } from 'vue'
+import { defineComponent, onMounted, PropType, inject, ref, Ref } from 'vue'
 import GraphLine from './instance/line'
-
-interface Main {
-    value: HTMLElement;
-}
 
 export default defineComponent({
     props:{
@@ -29,21 +29,29 @@ export default defineComponent({
         }
     },
     setup(props) {
+        const main = inject('main') as Ref<HTMLElement>
         const el = ref<HTMLCanvasElement | null>(null)
+        const graphLine = props.graphLine as GraphLine
+
+
+        const mouseclick = (e:MouseEvent) => {
+            if (graphLine.inPath) return graphLine.isFocus = true
+
+            graphLine.isFocus = false
+        }
 
         onMounted(() => {
-            const graphLine = props.graphLine as GraphLine
-            const main = inject('main') as Main
-            
             graphLine.setEl(el.value as HTMLCanvasElement)
             graphLine.setContainerEl(main.value)
-
-            main.value.addEventListener('mousemove', e => graphLine.draw(e))
-
+            main.value.addEventListener('mousemove', e => {
+                graphLine.draw(e)
+                graphLine.mouseCrash(e)
+            })
         })
 
         return {
-            el
+            el,
+            mouseclick
         }
     }
 })
@@ -54,6 +62,9 @@ export default defineComponent({
 .graph-line {
     position: absolute;
     z-index: 0;
+    &.graph-line-cursor {
+        // cursor: pointer;
+    }
 }
 
 </style>

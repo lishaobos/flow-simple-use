@@ -69,7 +69,7 @@ export default defineComponent({
 
       const checkNode = (node: GraphNode, ctrlKey: boolean) => {
         node.isFocus = true
-        if (ctrlKey) return 
+        if (ctrlKey) return
 
         nodeList.forEach( item => {
           if (item !== node) item.isFocus = false
@@ -77,7 +77,7 @@ export default defineComponent({
       }
 
       const mouseclick = () => {
-        nodeList.forEach( item => item.isFocus = false)
+        nodeList.forEach( item => item.blurFocus())
       }
 
       const drawLine = (point: NodePoint) => {

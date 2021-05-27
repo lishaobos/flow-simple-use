@@ -11,8 +11,8 @@ export interface Point {
   style: {
     [prop: string]: string;
   };
+  lineList: Line[];
   parent?: GraphNode;
-  lineList: Line[]
 }
                 
 const createId = () => `${Date.now()}`
@@ -50,6 +50,15 @@ export default class GraphNode {
     for (const p of list) {
       this.pointMap[p.id] = p
       p.parent = this
+    }
+  }
+
+  blurFocus() {
+    this.isFocus = false
+    for (const { lineList } of Object.values(this.pointMap)) {
+      for (const line of lineList) {
+        line.blurFocus()
+      }
     }
   }
 
