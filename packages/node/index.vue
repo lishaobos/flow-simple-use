@@ -4,7 +4,7 @@
     :id='graphNode.id'
     @mousedown="mousedown"
     @mouseup="mouseup"
-    @click.stop="mouseclick"
+    @click="mouseclick"
     :style="{
         left: `${graphNode['coordinate']['0']}px`,
         top: `${graphNode['coordinate']['1']}px`
@@ -87,6 +87,7 @@ export default defineComponent({
   height: 100px;
   border: 1px solid;
   z-index: 10;
+  background-color: #fff;
 }
 
 </style>
