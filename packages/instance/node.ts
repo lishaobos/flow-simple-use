@@ -65,6 +65,8 @@ export default class GraphNode {
   }
 
   mouseclick(e: MouseEvent) {
+    if (e.ctrlKey) return
+    
     this.isFocus = this.mouseCrash(e)
   }
 

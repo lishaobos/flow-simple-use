@@ -49,7 +49,7 @@ export default defineComponent({
 
 .graph-line {
     position: absolute;
-    z-index: 11;
+    // z-index: 11;
     &.graph-line-cursor {
         // cursor: pointer;
     }
