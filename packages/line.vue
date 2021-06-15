@@ -11,7 +11,6 @@
             'graph-line': true,
             'graph-line-cursor': graphLine.inPath
         }"
-        @click.stop="mouseclick"
     />
 </template>
 
@@ -33,25 +32,14 @@ export default defineComponent({
         const el = ref<HTMLCanvasElement | null>(null)
         const graphLine = props.graphLine as GraphLine
 
-
-        const mouseclick = (e:MouseEvent) => {
-            if (graphLine.inPath) return graphLine.isFocus = true
-
-            graphLine.isFocus = false
-        }
-
         onMounted(() => {
             graphLine.setEl(el.value as HTMLCanvasElement)
             graphLine.setContainerEl(main.value)
-            main.value.addEventListener('mousemove', e => {
-                graphLine.draw(e)
-                graphLine.mouseCrash(e)
-            })
+            main.value.addEventListener('mousemove', e => graphLine.draw(e))
         })
 
         return {
             el,
-            mouseclick
         }
     }
 })
@@ -61,7 +49,7 @@ export default defineComponent({
 
 .graph-line {
     position: absolute;
-    z-index: 0;
+    z-index: 11;
     &.graph-line-cursor {
         // cursor: pointer;
     }

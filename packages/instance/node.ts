@@ -21,7 +21,7 @@ export default class GraphNode {
   id: string;
   name: string;
   coordinate: coordinate;
-  el: HTMLElement | null;
+  el: HTMLElement | null = null;
   pointMap: { [prop: string]: Point } = {};
   isMove = false;
   isFocus = false;
@@ -31,7 +31,9 @@ export default class GraphNode {
     this.id = id
     this.name = name
     this.coordinate = coordinate
-    this.el = document.getElementById(id)
+    setTimeout(() => {
+      this.el = document.getElementById(id)
+    })
   }
 
   drawLine(e: MouseEvent) {
@@ -53,13 +55,17 @@ export default class GraphNode {
     }
   }
 
-  blurFocus() {
-    this.isFocus = false
-    for (const { lineList } of Object.values(this.pointMap)) {
-      for (const line of lineList) {
-        line.blurFocus()
-      }
+  mouseCrash(e: MouseEvent): boolean {
+    const { x, y, width, height } = (this.el as HTMLElement).getBoundingClientRect()
+    if (e.x >= x && e.x <= x + width && e.y >= y && e.y <= y + height) {
+      return true
     }
+
+    return false
+  }
+
+  mouseclick(e: MouseEvent) {
+    this.isFocus = this.mouseCrash(e)
   }
 
 }

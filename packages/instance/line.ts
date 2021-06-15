@@ -141,16 +141,28 @@ import {
         const exitPoint: Point = this.end ? this.getConnectPoint(this.end) : [(e as MouseEvent).x, (e as MouseEvent).y]
         this.points = this.calculatePoint(entryPoint, exitPoint)
   
-        if (e) this.setElStyle(e)
+        if (e) {
+            this.setElStyle(e)
+            this.end && this.mouseCrash(e)
+        }
         this.paint(this.points.map( p => [p[0] - x, p[1] - y]))
     }
     
-    blurFocus() {
-      this.isFocus = false
-    }
+    
+    mouseclick(e: MouseEvent) {
+        
+        if (this.inPath) {
+            this.isFocus = true
+        } else if (!e.ctrlKey) {
+            this.isFocus = false
+        }
 
-    mouseCrash({ x, y }: MouseEvent) {
-        this.inPath = false
+        this.draw(e)
+    }
+    
+
+    mouseCrash({ x, y, ctrlKey }: MouseEvent) {
+        if (!ctrlKey) this.inPath = false
         if (!this.end) return
 
         const lineList = this.getLineList(this.points)

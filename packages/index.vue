@@ -76,8 +76,9 @@ export default defineComponent({
         })
       }
 
-      const mouseclick = () => {
-        nodeList.forEach( item => item.blurFocus())
+      const mouseclick = (e: MouseEvent) => {
+        nodeList.forEach( item => item.mouseclick(e))
+        lineList.forEach( item => item.mouseclick(e))
       }
 
       const drawLine = (point: NodePoint) => {
