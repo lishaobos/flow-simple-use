@@ -66,7 +66,15 @@ export default defineComponent({
       const drop = (e: DragEvent) => {
         const { offsetX: x, offsetY: y } = e
         const { name, isCreate = false } = JSON.parse((e.dataTransfer as DataTransfer).getData('nodeData') || '{}')
-        if (isCreate) nodeList.push(new GraphNode(name, [x, y]))
+        if (isCreate) {
+          nodeList.push(new GraphNode({
+            name,
+            style: {
+              left: `${x}px`,
+              top: `${y}px`
+            }
+          }))
+        }
       }
 
       const checkNode = (node: GraphNode, ctrlKey: boolean) => {

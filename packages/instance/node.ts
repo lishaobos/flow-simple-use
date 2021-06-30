@@ -1,24 +1,21 @@
 import Line from './line'
 import { Side, createId } from './../untils'
 
-type coordinate = [number, number]
-
+export type Style = {
+  [prop: string]: string;
+}
 export interface SidePoint {
   id?: string;
   lineList?: Line[];
   side: Side;
-  style: {
-    [prop: string]: string;
-  };
+  style: Style;
   parent: GraphNode;
 }
 
 export class sidePointNode {
   id: string;
   side: Side;
-  style: {
-    [prop: string]: string;
-  };
+  style: Style;
   lineList: Line[] = [];
   parent: GraphNode;
   cache: {
@@ -43,22 +40,33 @@ export class sidePointNode {
   }
 }
 
+
+interface GraphNodeProps {
+  id?: string;
+  name?: string;
+  isMove?: boolean;
+  isFocus?: boolean;
+  style?: Style;
+}
+
 export default class GraphNode {
   id: string;
   name: string;
-  coordinate: coordinate;
   pointMap: { [prop: string]: sidePointNode } = {};
   isMove = false;
   isFocus = false;
+  style: Style = {};
   cache: {
     el?: HTMLElement;
     boundingClientRect?: DOMRect;
   } = {}
 
-  constructor(name: string, coordinate: coordinate) {
-    this.id = createId()
-    this.name = name
-    this.coordinate = coordinate
+  constructor(data: GraphNodeProps) {
+    this.id = data.id || createId()
+    this.name = data.name || ''
+    this.isMove = data.isMove || false
+    this.isFocus = data.isFocus || false
+    this.style = data.style || {}
   }
 
   get el() {
@@ -81,8 +89,11 @@ export default class GraphNode {
     }
   }
 
-  setCoordinate(coordinate: coordinate) {
-    this.coordinate = coordinate
+  setStyle(style: Style) {
+    this.style = {
+      ...this.style,
+      ...style
+    }
   }
 
   setPointList(list: sidePointNode[]) {

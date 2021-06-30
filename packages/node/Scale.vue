@@ -10,7 +10,7 @@
 </template>
 
 <script lang='ts'>
-import GraphNode from './../instance/node'
+import GraphNode, { Style } from './../instance/node'
 import { defineComponent, inject, Ref, PropType } from 'vue'
 
 export default defineComponent({
@@ -43,6 +43,7 @@ export default defineComponent({
       const { x: x1, y: y1 } = boundInfo
       const { x: x2, y: y2 } = main.value.getBoundingClientRect()
       const idx = pointRef.get(currentNode)
+      const style: Style = {}
 
       const min = 20
       let w = x - x1
@@ -62,14 +63,16 @@ export default defineComponent({
       const height = parentBoundInfo.height + h
 
       if (width > min) {
-        if(l) graphNode.el.style.left = `${l}px`
-        graphNode.el.style.width = `${width}px`
+        if(l) style.left = `${l}px`
+        style.width = `${width}px`
       }
 
       if (height > min) {
-        if(t) graphNode.el.style.top = `${t}px`
-        graphNode.el.style.height = `${height}px`
+        if(t) style.top = `${t}px`
+        style.height = `${height}px`
       }
+
+      graphNode.setStyle(style)
     }
 
     const mouseup = () => {
@@ -77,12 +80,13 @@ export default defineComponent({
       main.value.removeEventListener('mousemove', mousemove)
     }
 
+    main.value.addEventListener('mouseup', mouseup)
+    
     const mousedown = (e: MouseEvent) => {
       graphNode.isMove = true
       parentBoundInfo = graphNode.getBoundingClientRect()
       boundInfo = (currentNode = e.target as HTMLElement).getBoundingClientRect()
       main.value.addEventListener('mousemove', mousemove)
-      main.value.addEventListener('mouseup', mouseup)
     }
 
 

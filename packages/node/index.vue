@@ -5,10 +5,7 @@
     @mousedown="mousedown"
     @mouseup="mouseup"
     @click="mouseclick"
-    :style="{
-        left: `${graphNode['coordinate']['0']}px`,
-        top: `${graphNode['coordinate']['1']}px`
-    }"
+    :style="graphNode.style"
   >
 
     <template v-if="graphNode.isFocus">
@@ -53,7 +50,10 @@ export default defineComponent({
             const { left, top } = main.value.getBoundingClientRect()
             const { x,  y } = e
             graphNode.isMove = true
-            graphNode.setCoordinate([x - left - coordinate.x, y - top - coordinate.y])
+            graphNode.setStyle({
+                left: `${x - left - coordinate.x}px`,
+                top: `${y - top - coordinate.y}px`
+            })
         }
 
         const mouseup = () => {
