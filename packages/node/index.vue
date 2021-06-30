@@ -1,7 +1,7 @@
 <template>
   <div
-    class="component"
     :id='graphNode.id'
+    class="component"
     @mousedown="mousedown"
     @mouseup="mouseup"
     @click="mouseclick"
@@ -12,7 +12,7 @@
   >
 
     <template v-if="graphNode.isFocus">
-        <Scale :parentId='graphNode.id' />
+        <Scale :graphNode='graphNode' />
     </template>
 
     <component
@@ -24,7 +24,6 @@
 </template>
 
 <script lang='ts'>
-/* eslint-disable vue/no-mutating-props */
 import { defineComponent, inject, PropType, Ref } from 'vue'
 import GraphNode from './../instance/node'
 import Rectangle from './rectangle.vue'
@@ -47,25 +46,29 @@ export default defineComponent({
     setup(props, ctx) {
         const main = inject('main') as Ref<HTMLElement>
         let coordinate = { x: 0,  y: 0 }
+        // eslint-disable-next-line vue/no-setup-props-destructure
+        const { graphNode } = props
 
         const mousemove = (e: MouseEvent) => {
             const { left, top } = main.value.getBoundingClientRect()
             const { x,  y } = e
-            props.graphNode.setCoordinate([x - left - coordinate.x, y - top - coordinate.y])
+            graphNode.isMove = true
+            graphNode.setCoordinate([x - left - coordinate.x, y - top - coordinate.y])
         }
 
         const mouseup = () => {
+            graphNode.isMove = false
             main.value.removeEventListener('mousemove', mousemove)
         }
         
         const mousedown = (e: MouseEvent) => {
-            const { offsetX: x, offsetY: y, ctrlKey } = e
+            const { offsetX: x, offsetY: y } = e
             coordinate = { x, y }
             main.value.addEventListener('mousemove', mousemove)
         }
 
         const mouseclick = (e: MouseEvent) => {
-            const { offsetX: x, offsetY: y, ctrlKey } = e
+            const { ctrlKey } = e
             ctx.emit('checkNode', props.graphNode, ctrlKey)
         }
 

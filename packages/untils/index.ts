@@ -45,3 +45,5 @@ export const calcPosition = (el: HTMLElement, rootEl: HTMLElement) => {
     const { x: x2, y: y2 } = rootEl.getBoundingClientRect()
     return [x2 - x1, y2 - y1]
 }
+
+export const createId = () => `flow-${Date.now()}-${Math.random()}`

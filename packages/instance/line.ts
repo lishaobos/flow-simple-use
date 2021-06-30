@@ -11,20 +11,20 @@ import {
     add,
     // multCross,
     product
-  } from './../untils'
-  import { Point as NodePoint } from './node'
-  
-  interface Style {
+} from './../untils'
+import { sidePointNode } from './node'
+
+interface Style {
     width?: number;
     height?: number;
     left?: number;
     top?: number;
-  }
+}
+
   
-  
-  export default class GraphLine {
-    start: NodePoint;
-    end: NodePoint | null = null;
+export default class GraphLine {
+    start: sidePointNode;
+    end: sidePointNode | null = null;
     el: HTMLCanvasElement | null = null;
     containerEl: HTMLElement | null = null;
     ctx: CanvasRenderingContext2D | null = null;
@@ -39,7 +39,7 @@ import {
     isCrash: 0 | 1 | 2 = 0;
     points: Point[] = [];
   
-    constructor(node: NodePoint) {
+    constructor(node: sidePointNode) {
         this.start = node
         this.start.lineList.push(this)
         this.entryDirection = direction[node.side]
@@ -54,7 +54,7 @@ import {
         this.containerEl = el
     }
   
-    setEnd(node: NodePoint) {
+    setEnd(node: sidePointNode) {
         this.end = node
         this.end.lineList.push(this)
         this.exitDirection = direction[node.side]
@@ -64,26 +64,19 @@ import {
     setElStyle(e: MouseEvent) { 
         let { x, y } = e
         const { x: x1, y: y1 } = (this.containerEl as HTMLElement).getBoundingClientRect()
-        const { x: x2, y: y2 } = (this.start.sideEl as HTMLElement).getBoundingClientRect()
+        const { x: x2, y: y2 } = this.start.getBoundingClientRect()
 
         let [crashWidth, crashHeight, crashTop, crashLeft] = [0, 0, 0, 0]
   
         if (this.end) {
-            const sideEl = this.end.sideEl as HTMLElement
-            const { x: x3, y: y3 } = sideEl.getBoundingClientRect()
+            const { x: x3, y: y3 } = this.end.getBoundingClientRect()
             x = x3
             y = y3
             
             if (this.isCrash) {
-                const startEl = this.start.el
-                const { x: x4, y: y4 } = startEl.getBoundingClientRect()
-                const sw = startEl.offsetWidth
-                const sh = startEl.offsetHeight
+                const { x: x4, y: y4, width: sw, height: sh } = this.start.parent.getBoundingClientRect()
   
-                const endEl = this.end.el
-                const { x: x5, y: y5 } = endEl.getBoundingClientRect()
-                const ew = endEl.offsetWidth
-                const eh = endEl.offsetHeight
+                const { x: x5, y: y5, width: ew, height: eh } = this.end.parent.getBoundingClientRect()
 
                 crashTop = Math.min(y4, y5)
                 crashLeft = Math.min(x4, x5)
@@ -117,10 +110,11 @@ import {
         }
     }
   
-    getConnectPoint(node: NodePoint): Point {
+    getConnectPoint(node: sidePointNode): Point {
+        // 1px 偏移避免碰撞检测
         const side = node.side
-        const { x: x1, y: y1, width: w1, height: h1 } = (node.sideEl as HTMLElement).getBoundingClientRect()
-        const { x: x2, y: y2, width: w2, height: h2 } = node.el.getBoundingClientRect()
+        const { x: x1, y: y1, width: w1, height: h1 } = node.getBoundingClientRect()
+        const { x: x2, y: y2, width: w2, height: h2 } = node.parent.getBoundingClientRect()
 
         if ([1, 3].includes(side)) {
             if (side === 1) return [x1, y2 - 1]
@@ -187,7 +181,7 @@ import {
       
     drawArrows([x, y]: Point) {
         const ctx = this.ctx as CanvasRenderingContext2D
-        const side = (this.end as NodePoint).side
+        const side = (this.end as sidePointNode).side
         
         let angle = Math.PI / 180
         if (side === 1) {
@@ -278,14 +272,14 @@ import {
         points.push(end, exit)
 
           if (this.end) {
-            const lineList = this.getCrashLine(points, [this.start, this.end as NodePoint])
+            const lineList = this.getCrashLine(points, [this.start, this.end as sidePointNode])
             // 多个相交线先暂时忽略
             if (lineList.length === 1) {
                 let noCrashPoints = points
                 const mathArr: ('max' | 'min')[] = ['max', 'min']
                 for (const item of mathArr) {
                     const calcPoints = this.getNoCrashPoints(points, lineList[0], item)
-                    const crashLineList =  this.getCrashLine(calcPoints, [this.start, this.end as NodePoint])
+                    const crashLineList =  this.getCrashLine(calcPoints, [this.start, this.end as sidePointNode])
                     if (!crashLineList.length) {
                         noCrashPoints = calcPoints
                         break
@@ -303,15 +297,13 @@ import {
         const vector = minus(line[0], line[1])
         const isVertical = isParallel([0, 1], vector)
   
-        const startEl = this.start.el
-        const { x: x1, y: y1} = startEl.getBoundingClientRect()
-        const x2 = x1 + startEl.offsetWidth
-        const y2 = y1 + startEl.offsetHeight
+        const { x: x1, y: y1, width: w1, height: h1} = this.start.parent.getBoundingClientRect()
+        const x2 = x1 + w1
+        const y2 = y1 + h1
   
-        const endEl = (this.end as NodePoint).el
-        const { x: x3, y: y3} = endEl.getBoundingClientRect()
-        const x4 = x3 + endEl.offsetWidth
-        const y4 = y3 + endEl.offsetHeight
+        const { x: x3, y: y3, width: w2, height: h2} = (this.end as sidePointNode).parent.getBoundingClientRect()
+        const x4 = x3 + w2
+        const y4 = y3 + h2
   
         const [lp1, lp2] = line
         const isSamePoint = (p1: Point, p2: Point) => p1[0] === p2[0] && p1[1] === p2[1]
@@ -359,7 +351,7 @@ import {
         return lineList
     }
   
-    getCrashLine(points: Point[], nodeList: NodePoint[]): Line[]{
+    getCrashLine(points: Point[], nodeList: sidePointNode[]): Line[]{
         const lineList = this.getLineList(points)
         
         const crashLineMap: { [propName: string]: Line } = {}
@@ -401,11 +393,8 @@ import {
         return true
     }
   
-    getNodeLineList(node: NodePoint): Line[] {
-        const el = node.el
-        const { x, y} = el.getBoundingClientRect()
-        const w = el.offsetWidth
-        const h = el.offsetHeight
+    getNodeLineList(node: sidePointNode): Line[] {
+        const { x, y, width: w, height: h} = node.parent.getBoundingClientRect()
         
         return [
             [[x, y], [x + w, y]],

@@ -12,9 +12,11 @@
     <main
       ref='main'
       class="main"
+      tabindex='1'
       @drop='drop'
       @dragover.prevent
       @click="mouseclick"
+      @keydown.ctrl.s="save"
     >
       <FlowNode
         v-for="(node, index) in nodeList"
@@ -34,9 +36,9 @@
 </template>
 
 <script lang='ts'>
-import { defineComponent, reactive, ref, provide } from 'vue'
+import { defineComponent, reactive, ref, provide, onMounted } from 'vue'
 import FlowNode from './node/index.vue'
-import GraphNode, { Point as NodePoint } from './instance/node'
+import GraphNode, { sidePointNode } from './instance/node'
 import FlowLine from './line.vue'
 import GraphNLine from './instance/line'
 
@@ -47,7 +49,7 @@ export default defineComponent({
       FlowLine
     },
     setup() {
-      const main = ref(null)
+      const main = ref<null | HTMLElement>(null)
       provide('main', main)
 
       let currentDrawLine: GraphNLine | null = null
@@ -79,9 +81,12 @@ export default defineComponent({
       const mouseclick = (e: MouseEvent) => {
         nodeList.forEach( item => item.mouseclick(e))
         lineList.forEach( item => item.mouseclick(e))
+        console.log(nodeList, lineList)
+        // console.log(nodeList, JSON.parse(JSON.stringify(nodeList)))
+        // console.log(lineList, JSON.parse(JSON.stringify(lineList)))
       }
 
-      const drawLine = (point: NodePoint) => {
+      const drawLine = (point: sidePointNode) => {
         if (currentDrawLine) {
           currentDrawLine.setEnd(point)
           currentDrawLine = null
@@ -93,6 +98,18 @@ export default defineComponent({
         lineList.push(currentDrawLine)
       }
 
+      onMounted(() => {
+        document.onkeydown = (e: KeyboardEvent) => {
+          if(e.ctrlKey && e.key === 's'){
+            e.preventDefault()
+          }
+        }
+      })
+
+      const save = () => {
+        console.log(123)
+      }
+
       return {
         main,
         nodeList,
@@ -102,6 +119,7 @@ export default defineComponent({
         checkNode,
         drawLine,
         mouseclick,
+        save
       }
     }
 })

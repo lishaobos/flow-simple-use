@@ -1,6 +1,5 @@
 <template>
   <div 
-    ref='rectangle'
     class="rectangle"
     @mousemove="isInElement = true"
     @mouseleave="isInElement = false"
@@ -14,9 +13,9 @@
         'point-show': isInElement
       }"
       v-for="(item, index) in Object.values(graphNode.pointMap)"
+      :id='item.id'
       :key="index"
       :style="item.style"
-      :ref="el => { if(el) item.sideEl = el }"
       @click="drawLine(item)"
       @mousedown.stop
     />
@@ -24,8 +23,8 @@
 </template>
 
 <script lang='ts'>
-import { defineComponent, PropType, ref, reactive, onMounted } from 'vue'
-import GraphNode, { Point } from './../instance/node'
+import { defineComponent, PropType, ref } from 'vue'
+import GraphNode, { SidePoint, sidePointNode } from './../instance/node'
 
 export default defineComponent({
     name: 'RectangleNode',
@@ -38,31 +37,28 @@ export default defineComponent({
         },
     },
     setup(props, ctx) {
-      const isFocus = ref(false)
       const isInElement = ref(false)
-      const rectangle = ref<HTMLElement | null>(null)
 
-      onMounted( () => {
-        const pointList = reactive<Point[]>([
-            { id: '1', el: rectangle.value as HTMLElement, sideEl: null, side: 1, style: { top: '-5px', left: '50%' }, lineList: [] },
-            { id: '2', el: rectangle.value as HTMLElement, sideEl: null, side: 2, style: { right: '-5px', top: '50%' }, lineList: [] },
-            { id: '3', el: rectangle.value as HTMLElement, sideEl: null, side: 3, style: { bottom: '-5px', left: '50%' }, lineList: [] },
-            { id: '4', el: rectangle.value as HTMLElement, sideEl: null, side: 4, style: { left: '-5px', top: '50%' }, lineList: [] },
-        ])
+      // eslint-disable-next-line vue/no-setup-props-destructure
+      const { graphNode: parent } = props
+      const sidePointList: SidePoint[] = [
+        { side: 1, style: { top: '-5px', left: '50%' }, parent },
+        { side: 2, style: { right: '-5px', top: '50%' }, parent },
+        { side: 3, style: { bottom: '-5px', left: '50%' }, parent },
+        { side: 4, style: { left: '-5px', top: '50%' }, parent },
+      ]
 
-        props.graphNode.setPointList(pointList)
-      })
+      const sidePointNodeList: sidePointNode[] = sidePointList.map( item => new sidePointNode(item))
 
-      const drawLine = (point: Point) => {
-        isFocus.value = true
+      parent.setPointList(sidePointNodeList)
+
+      const drawLine = (point: sidePointNode) => {
         ctx.emit('checkNode', props.graphNode)
         ctx.emit('drawLine', point)
       }
 
 
       return {
-        rectangle,
-        isFocus,
         isInElement,
         drawLine
       }

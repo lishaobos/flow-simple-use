@@ -10,21 +10,23 @@
 </template>
 
 <script lang='ts'>
-import { defineComponent, inject, Ref } from 'vue'
+import GraphNode from './../instance/node'
+import { defineComponent, inject, Ref, PropType } from 'vue'
 
 export default defineComponent({
   name: 'Scale',
   props: {
-    parentId: {
-      type: String,
-      default: ''
+    graphNode: {
+      type: Object as PropType<GraphNode>,
+      default: null
     }
   },
   setup(props) {
+    // eslint-disable-next-line vue/no-setup-props-destructure
+    const graphNode = props.graphNode
     const main = inject<Ref<HTMLElement>>('main') as Ref<HTMLElement>
     const pointRef = new WeakMap<HTMLElement, (1 | 2 | 3 | 4)>()
 
-    let parentNode: HTMLElement
     let currentNode: HTMLElement
     let parentBoundInfo = { x: 0, y: 0, width: 0, height: 0 }
     let boundInfo = { x: 0, y: 0, width: 0, height: 0  }
@@ -60,21 +62,24 @@ export default defineComponent({
       const height = parentBoundInfo.height + h
 
       if (width > min) {
-        if(l) parentNode.style.left = `${l}px`
-        parentNode.style.width = `${width}px`
+        if(l) graphNode.el.style.left = `${l}px`
+        graphNode.el.style.width = `${width}px`
       }
 
       if (height > min) {
-        if(t) parentNode.style.top = `${t}px`
-        parentNode.style.height = `${height}px`
+        if(t) graphNode.el.style.top = `${t}px`
+        graphNode.el.style.height = `${height}px`
       }
     }
 
-    const mouseup = () => main.value.removeEventListener('mousemove', mousemove)
+    const mouseup = () => {
+      graphNode.isMove = false
+      main.value.removeEventListener('mousemove', mousemove)
+    }
 
     const mousedown = (e: MouseEvent) => {
-      parentNode = document.getElementById(props.parentId) as HTMLElement
-      parentBoundInfo = parentNode.getBoundingClientRect()
+      graphNode.isMove = true
+      parentBoundInfo = graphNode.getBoundingClientRect()
       boundInfo = (currentNode = e.target as HTMLElement).getBoundingClientRect()
       main.value.addEventListener('mousemove', mousemove)
       main.value.addEventListener('mouseup', mouseup)

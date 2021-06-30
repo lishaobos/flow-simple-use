@@ -1,39 +1,76 @@
 import Line from './line'
-import { Side } from './../untils'
+import { Side, createId } from './../untils'
 
 type coordinate = [number, number]
 
-export interface Point {
-  id: string;
-  el: HTMLElement;
-  sideEl: HTMLElement | null;
+export interface SidePoint {
+  id?: string;
+  lineList?: Line[];
   side: Side;
   style: {
     [prop: string]: string;
   };
-  lineList: Line[];
-  parent?: GraphNode;
+  parent: GraphNode;
 }
-                
-const createId = () => `${Date.now()}`
-                
+
+export class sidePointNode {
+  id: string;
+  side: Side;
+  style: {
+    [prop: string]: string;
+  };
+  lineList: Line[] = [];
+  parent: GraphNode;
+  cache: {
+    el?: HTMLElement;
+    boundingClientRect?: DOMRect;
+  } = {}
+
+  constructor(data: SidePoint) {
+    this.id = data.id || createId()
+    this.side = data.side
+    this.style = data.style
+    this.parent = data.parent
+  }
+  
+
+  getBoundingClientRect() {
+    const el = this.cache.el ??= (document.getElementById(this.id) as HTMLElement)
+
+    if (this.parent.isMove)  return this.cache.boundingClientRect = el.getBoundingClientRect()
+
+    return  this.cache.boundingClientRect ??= el.getBoundingClientRect()
+  }
+}
+
 export default class GraphNode {
   id: string;
   name: string;
   coordinate: coordinate;
-  el: HTMLElement | null = null;
-  pointMap: { [prop: string]: Point } = {};
+  pointMap: { [prop: string]: sidePointNode } = {};
   isMove = false;
   isFocus = false;
+  cache: {
+    el?: HTMLElement;
+    boundingClientRect?: DOMRect;
+  } = {}
 
   constructor(name: string, coordinate: coordinate) {
-    const id = createId()
-    this.id = id
+    this.id = createId()
     this.name = name
     this.coordinate = coordinate
-    setTimeout(() => {
-      this.el = document.getElementById(id)
-    })
+  }
+
+  get el() {
+    return this.cache.el ??= (document.getElementById(this.id) as HTMLElement)
+  }
+
+  getBoundingClientRect() {
+    const el = this.el
+
+    if (this.isMove)  return this.cache.boundingClientRect = el.getBoundingClientRect()
+      
+    return  this.cache.boundingClientRect ??= el.getBoundingClientRect()
   }
 
   drawLine(e: MouseEvent) {
@@ -48,7 +85,7 @@ export default class GraphNode {
     this.coordinate = coordinate
   }
 
-  setPointList(list: Point[]) {
+  setPointList(list: sidePointNode[]) {
     for (const p of list) {
       this.pointMap[p.id] = p
       p.parent = this
@@ -56,7 +93,7 @@ export default class GraphNode {
   }
 
   mouseCrash(e: MouseEvent): boolean {
-    const { x, y, width, height } = (this.el as HTMLElement).getBoundingClientRect()
+    const { x, y, width, height } = this.getBoundingClientRect()
     if (e.x >= x && e.x <= x + width && e.y >= y && e.y <= y + height) {
       return true
     }

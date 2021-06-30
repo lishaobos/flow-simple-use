@@ -1,24 +1,9 @@
 # flow-simple-use
 
-## Project setup
-```
-npm install
-```
+## Todos
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+- 删除
 
-### Compiles and minifies for production
-```
-npm run build
-```
+- 撤销，恢复，保存
 
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+- 对齐
