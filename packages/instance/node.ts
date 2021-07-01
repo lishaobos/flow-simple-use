@@ -1,5 +1,6 @@
 import Line from './line'
 import { Side, createId } from './../untils'
+import { findNode } from './../untils/record'
 
 export type Style = {
   [prop: string]: string;
@@ -9,7 +10,7 @@ export interface SidePoint {
   lineList?: Line[];
   side: Side;
   style: Style;
-  parent: GraphNode;
+  parentId: string;
 }
 
 export class sidePointNode {
@@ -17,8 +18,9 @@ export class sidePointNode {
   side: Side;
   style: Style;
   lineList: Line[] = [];
-  parent: GraphNode;
+  parentId: string;
   cache: {
+    parent?: GraphNode;
     el?: HTMLElement;
     boundingClientRect?: DOMRect;
   } = {}
@@ -27,7 +29,7 @@ export class sidePointNode {
     this.id = data.id || createId()
     this.side = data.side
     this.style = data.style
-    this.parent = data.parent
+    this.parentId = data.parentId
   }
 
   toJSON() {
@@ -42,6 +44,15 @@ export class sidePointNode {
 
       data[key] = value
     }
+
+    return data
+  }
+
+  get parent() {
+    if (this.cache.parent) return this.cache.parent
+    
+    const parent = (findNode(this.parentId) as GraphNode)
+    return this.cache.parent = parent
   }
 
   getBoundingClientRect() {
@@ -54,21 +65,22 @@ export class sidePointNode {
 }
 
 
-interface GraphNodeProps {
+export interface GraphNodeProps {
   id?: string;
   name?: string;
   isMove?: boolean;
   isFocus?: boolean;
   style?: Style;
+  sidePointList?: sidePointNode[];
 }
 
 export default class GraphNode {
   id: string;
   name: string;
   sidePointList: sidePointNode[] = [];
-  isMove = false;
-  isFocus = false;
-  style: Style = {};
+  isMove: boolean;
+  isFocus: boolean;
+  style: Style;
   cache: {
     el?: HTMLElement;
     boundingClientRect?: DOMRect;
@@ -80,6 +92,10 @@ export default class GraphNode {
     this.isMove = data.isMove || false
     this.isFocus = data.isFocus || false
     this.style = data.style || {}
+    this.sidePointList = data.sidePointList || []
+    if (this.sidePointList.length) {
+      this.setPointList(this.sidePointList)
+    }
   }
 
   toJSON() {
@@ -87,11 +103,6 @@ export default class GraphNode {
     for (const [key, value] of Object.entries(this)) {
       if (key === 'cache') continue
 
-      if (key === 'sidePointList') {
-        data.sidePointList = (value as sidePointNode[]).map(side => side.toJSON())
-        continue
-      }
-  
       data[key] = value
     }
 
@@ -125,8 +136,9 @@ export default class GraphNode {
     }
   }
 
-  setPointList(list: sidePointNode[]) {
-    this.sidePointList.push(...list)
+  setPointList(list: SidePoint[]) {
+    if (this.sidePointList.some( item => item.getBoundingClientRect)) return
+    this.sidePointList = list.map( item => new sidePointNode(item))
   }
 
   mouseCrash(e: MouseEvent): boolean {

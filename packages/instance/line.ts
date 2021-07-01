@@ -22,7 +22,7 @@ interface Style {
     top?: number;
 }
 
-interface GraphLineProps {
+export interface GraphLineProps {
     startId: string;
     endId?: string;
     style?: Style;
@@ -63,7 +63,7 @@ export default class GraphLine {
         this.start.lineList.push(this)
         this.entryDirection = direction[this.start.side]
         this.exitDirection = direction[this.start.side]
-        data.endId && this.setEnd(this.endId = data.endId)
+        data.endId && this.setEnd(data.endId)
 
         this.style = data.style || {}
         this.isMorePoint = data.isMorePoint || false
@@ -71,6 +71,17 @@ export default class GraphLine {
         this.isFocus = data.isFocus || false
         this.isCrash = data.isCrash || 0
         this.points = data.points || []
+    }
+
+    toJSON() {
+        const data: { [prop: string]: any } = {}
+        for (const [key, value] of Object.entries(this)) {
+            if (key === 'cache') continue
+
+            data[key] = value
+        }
+
+        return data
     }
 
     get start() {
@@ -181,6 +192,8 @@ export default class GraphLine {
     }
       
     draw(e?: MouseEvent) {
+        if (!this.el) return
+
         const el = this.el as HTMLElement
         const { x, y } = el.getBoundingClientRect()
 

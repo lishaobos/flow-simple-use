@@ -16,8 +16,8 @@
       @drop='drop'
       @dragover.prevent
       @click="mouseclick"
-      @keydown.ctrl.s="save"
       @keydown.ctrl.z="cancel"
+      @keydown.ctrl.y="next"
     >
       <FlowNode
         v-for="(node, index) in nodeList"
@@ -37,12 +37,12 @@
 </template>
 
 <script lang='ts'>
-import { defineComponent, reactive, ref, provide, onMounted } from 'vue'
+import { defineComponent, ref, provide, onMounted } from 'vue'
 import FlowNode from './node/index.vue'
 import GraphNode, { sidePointNode } from './instance/node'
 import FlowLine from './line.vue'
 import GraphNLine from './instance/line'
-import { nodeList, lineList } from './untils/record'
+import { nodeList, lineList, saveRecord, cancelRecord, nextRecord } from './untils/record'
 
 export default defineComponent({
     name: 'FlowContainer',
@@ -74,6 +74,8 @@ export default defineComponent({
               top: `${y}px`
             }
           }))
+
+          saveRecord()
         }
       }
 
@@ -89,7 +91,6 @@ export default defineComponent({
       const mouseclick = (e: MouseEvent) => {
         nodeList.forEach( item => item.mouseclick(e))
         lineList.forEach( item => item.mouseclick(e))
-        console.log(nodeList, lineList)
         // console.log(nodeList, JSON.parse(JSON.stringify(nodeList)))
         // console.log(lineList, JSON.parse(JSON.stringify(lineList)))
       }
@@ -98,6 +99,7 @@ export default defineComponent({
         if (currentDrawLine) {
           currentDrawLine.setEnd(point.id)
           currentDrawLine = null
+          saveRecord()
           return
         }
           
@@ -114,12 +116,12 @@ export default defineComponent({
         }
       })
 
-      const save = () => {
-        console.log(123)
+      const cancel = () => {
+        cancelRecord()
       }
 
-      const cancel = () => {
-        console.log('cancel')
+      const next = () => {
+        nextRecord()
       }
 
       return {
@@ -131,8 +133,8 @@ export default defineComponent({
         checkNode,
         drawLine,
         mouseclick,
-        save,
-        cancel
+        cancel,
+        next
       }
     }
 })

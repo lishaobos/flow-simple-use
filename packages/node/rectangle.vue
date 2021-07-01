@@ -23,7 +23,7 @@
 </template>
 
 <script lang='ts'>
-import { defineComponent, PropType, ref } from 'vue'
+import { defineComponent, nextTick, PropType, ref } from 'vue'
 import GraphNode, { SidePoint, sidePointNode } from './../instance/node'
 
 export default defineComponent({
@@ -41,16 +41,15 @@ export default defineComponent({
 
       // eslint-disable-next-line vue/no-setup-props-destructure
       const { graphNode: parent } = props
+      const { id: parentId } = parent
       const sidePointList: SidePoint[] = [
-        { side: 1, style: { top: '-5px', left: '50%' }, parent },
-        { side: 2, style: { right: '-5px', top: '50%' }, parent },
-        { side: 3, style: { bottom: '-5px', left: '50%' }, parent },
-        { side: 4, style: { left: '-5px', top: '50%' }, parent },
+        { side: 1, style: { top: '-5px', left: '50%' }, parentId, },
+        { side: 2, style: { right: '-5px', top: '50%' }, parentId, },
+        { side: 3, style: { bottom: '-5px', left: '50%' }, parentId, },
+        { side: 4, style: { left: '-5px', top: '50%' }, parentId, },
       ]
 
-      const sidePointNodeList: sidePointNode[] = sidePointList.map( item => new sidePointNode(item))
-
-      parent.setPointList(sidePointNodeList)
+      parent.setPointList(sidePointList)
 
       const drawLine = (point: sidePointNode) => {
         ctx.emit('checkNode', props.graphNode)
