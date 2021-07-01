@@ -29,7 +29,20 @@ export class sidePointNode {
     this.style = data.style
     this.parent = data.parent
   }
-  
+
+  toJSON() {
+    const data: { [prop: string]: any } = {}
+    for (const [key, value] of Object.entries(this)) {
+      if (key === 'cache') continue
+      
+      if (key === 'lineList') {
+        data.lineList = []
+        continue
+      }
+
+      data[key] = value
+    }
+  }
 
   getBoundingClientRect() {
     const el = this.cache.el ??= (document.getElementById(this.id) as HTMLElement)
@@ -52,7 +65,7 @@ interface GraphNodeProps {
 export default class GraphNode {
   id: string;
   name: string;
-  pointMap: { [prop: string]: sidePointNode } = {};
+  sidePointList: sidePointNode[] = [];
   isMove = false;
   isFocus = false;
   style: Style = {};
@@ -69,6 +82,22 @@ export default class GraphNode {
     this.style = data.style || {}
   }
 
+  toJSON() {
+    const data: { [prop: string]: any } = {}
+    for (const [key, value] of Object.entries(this)) {
+      if (key === 'cache') continue
+
+      if (key === 'sidePointList') {
+        data.sidePointList = (value as sidePointNode[]).map(side => side.toJSON())
+        continue
+      }
+  
+      data[key] = value
+    }
+
+    return data
+  }
+
   get el() {
     return this.cache.el ??= (document.getElementById(this.id) as HTMLElement)
   }
@@ -82,7 +111,7 @@ export default class GraphNode {
   }
 
   drawLine(e: MouseEvent) {
-    for (const { lineList } of Object.values(this.pointMap)) {
+    for (const { lineList } of this.sidePointList) {
       for (const line of lineList) {
         line.draw(e)
       }
@@ -97,10 +126,7 @@ export default class GraphNode {
   }
 
   setPointList(list: sidePointNode[]) {
-    for (const p of list) {
-      this.pointMap[p.id] = p
-      p.parent = this
-    }
+    this.sidePointList.push(...list)
   }
 
   mouseCrash(e: MouseEvent): boolean {

@@ -12,7 +12,7 @@
         'point': true,
         'point-show': isInElement
       }"
-      v-for="(item, index) in Object.values(graphNode.pointMap)"
+      v-for="(item, index) in graphNode.sidePointList"
       :id='item.id'
       :key="index"
       :style="item.style"

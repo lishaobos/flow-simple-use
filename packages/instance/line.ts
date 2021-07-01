@@ -12,6 +12,7 @@ import {
     // multCross,
     product
 } from './../untils'
+import { findSideNode } from './../untils/record'
 import { sidePointNode } from './node'
 
 interface Style {
@@ -21,43 +22,95 @@ interface Style {
     top?: number;
 }
 
+interface GraphLineProps {
+    startId: string;
+    endId?: string;
+    style?: Style;
+    entryDirection?: Direction;
+    exitDirection?: Direction;
+    isMorePoint?: boolean;
+    inPath?: boolean;
+    isFocus?: boolean;
+    focusColor?: string;
+    // 0 未相交 1 垂直相交 2 水平相交
+    isCrash?: 0 | 1 | 2;
+    points?: Point[];
+}
   
 export default class GraphLine {
-    start: sidePointNode;
-    end: sidePointNode | null = null;
-    el: HTMLCanvasElement | null = null;
-    containerEl: HTMLElement | null = null;
-    ctx: CanvasRenderingContext2D | null = null;
-    style: Style = {};
-    entryDirection: Direction = direction[side.top];
-    exitDirection: Direction = direction[side.top];
-    isMorePoint = false;
-    inPath = false;
-    isFocus = false;
+    startId: string;
+    endId: string | undefined;
+    style: Style;
+    entryDirection: Direction;
+    exitDirection: Direction;
+    isMorePoint: boolean;
+    inPath: boolean;
+    isFocus: boolean;
     focusColor = 'red';
     // 0 未相交 1 垂直相交 2 水平相交
-    isCrash: 0 | 1 | 2 = 0;
-    points: Point[] = [];
+    isCrash: 0 | 1 | 2;
+    points: Point[];
+    cache: {
+        start?: sidePointNode;
+        end?: sidePointNode;
+        el?: HTMLCanvasElement;
+        containerEl?: HTMLCanvasElement;
+        ctx?: CanvasRenderingContext2D;
+    } = {}
   
-    constructor(node: sidePointNode) {
-        this.start = node
+    constructor(data: GraphLineProps) {
+        this.startId = data.startId
         this.start.lineList.push(this)
-        this.entryDirection = direction[node.side]
+        this.entryDirection = direction[this.start.side]
+        this.exitDirection = direction[this.start.side]
+        data.endId && this.setEnd(this.endId = data.endId)
+
+        this.style = data.style || {}
+        this.isMorePoint = data.isMorePoint || false
+        this.inPath = data.inPath || false
+        this.isFocus = data.isFocus || false
+        this.isCrash = data.isCrash || 0
+        this.points = data.points || []
+    }
+
+    get start() {
+        const start = (findSideNode(this.startId) as sidePointNode)
+        return this.cache.start ??= start
+    }
+  
+    get end() {
+        if (!this.endId) return
+
+        const end = (findSideNode(this.endId) as sidePointNode)
+        return this.cache.end ??= end
+    }
+
+    get el() {
+        return this.cache.el
+    }
+
+    get ctx() {
+        return this.cache.ctx
+    }
+
+    get containerEl() {
+        return this.cache.containerEl
     }
   
     setEl(el: HTMLCanvasElement) {
-        this.el = el
-        this.ctx = el.getContext('2d') as CanvasRenderingContext2D
+        this.cache.el = el
+        this.cache.ctx = el.getContext('2d') as CanvasRenderingContext2D
     }
   
-    setContainerEl(el: HTMLElement) {
-        this.containerEl = el
+    setContainerEl(el: HTMLCanvasElement) {
+        this.cache.containerEl = el
     }
   
-    setEnd(node: sidePointNode) {
-        this.end = node
-        this.end.lineList.push(this)
-        this.exitDirection = direction[node.side]
+    setEnd(endId: string) {
+        this.endId = endId
+        const end = this.end as sidePointNode
+        end.lineList.push(this)
+        this.exitDirection = direction[end.side]
         this.draw()
     }
   

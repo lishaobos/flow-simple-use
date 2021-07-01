@@ -28,7 +28,7 @@ export default defineComponent({
         }
     },
     setup(props) {
-        const main = inject('main') as Ref<HTMLElement>
+        const main = inject('main') as Ref<HTMLCanvasElement>
         const el = ref<HTMLCanvasElement | null>(null)
         const graphLine = props.graphLine as GraphLine
 

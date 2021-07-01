@@ -17,6 +17,7 @@
       @dragover.prevent
       @click="mouseclick"
       @keydown.ctrl.s="save"
+      @keydown.ctrl.z="cancel"
     >
       <FlowNode
         v-for="(node, index) in nodeList"
@@ -41,6 +42,7 @@ import FlowNode from './node/index.vue'
 import GraphNode, { sidePointNode } from './instance/node'
 import FlowLine from './line.vue'
 import GraphNLine from './instance/line'
+import { nodeList, lineList } from './untils/record'
 
 export default defineComponent({
     name: 'FlowContainer',
@@ -53,8 +55,6 @@ export default defineComponent({
       provide('main', main)
 
       let currentDrawLine: GraphNLine | null = null
-      const nodeList: GraphNode[] = reactive([])
-      const lineList: GraphNLine[] = reactive([])
 
       const dragstart = (e: DragEvent) => {
         (e.dataTransfer as DataTransfer).setData('nodeData', JSON.stringify({
@@ -96,12 +96,12 @@ export default defineComponent({
 
       const drawLine = (point: sidePointNode) => {
         if (currentDrawLine) {
-          currentDrawLine.setEnd(point)
+          currentDrawLine.setEnd(point.id)
           currentDrawLine = null
           return
         }
           
-        currentDrawLine = new GraphNLine(point)
+        currentDrawLine = new GraphNLine({ startId: point.id })
         point.lineList.push(currentDrawLine)
         lineList.push(currentDrawLine)
       }
@@ -118,6 +118,10 @@ export default defineComponent({
         console.log(123)
       }
 
+      const cancel = () => {
+        console.log('cancel')
+      }
+
       return {
         main,
         nodeList,
@@ -127,7 +131,8 @@ export default defineComponent({
         checkNode,
         drawLine,
         mouseclick,
-        save
+        save,
+        cancel
       }
     }
 })
