@@ -35,6 +35,8 @@ export const cancelRecord = async () => {
   await nextTick()
   const lineRecord = l.map((item: GraphLineProps) => new Line(item))
   lineList.push(...lineRecord)
+  await nextTick()
+  lineList.forEach( line => line.draw())
 }
 
 export const nextRecord = async () => {
@@ -55,6 +57,8 @@ export const nextRecord = async () => {
   await nextTick()
   const lineRecord = l.map((item: GraphLineProps) => new Line(item))
   lineList.push(...lineRecord)
+  await nextTick()
+  lineList.forEach( line => line.draw())
 }
 
 export const findSideNode = (id: string) => {

@@ -125,8 +125,8 @@ export default class GraphLine {
         this.draw()
     }
   
-    setElStyle(e: MouseEvent) { 
-        let { x, y } = e
+    setElStyle(e?: MouseEvent) { 
+        let { x, y } = e || { x: 0, y: 0 }
         const { x: x1, y: y1 } = (this.containerEl as HTMLElement).getBoundingClientRect()
         const { x: x2, y: y2 } = this.start.getBoundingClientRect()
 
@@ -193,18 +193,19 @@ export default class GraphLine {
       
     draw(e?: MouseEvent) {
         if (!this.el) return
-
+        
         const el = this.el as HTMLElement
         const { x, y } = el.getBoundingClientRect()
-
+        
         const entryPoint: Point = this.getConnectPoint(this.start)
         const exitPoint: Point = this.end ? this.getConnectPoint(this.end) : [(e as MouseEvent).x, (e as MouseEvent).y]
         this.points = this.calculatePoint(entryPoint, exitPoint)
   
-        if (e) {
+        if (e || this.end) {
             this.setElStyle(e)
-            this.end && this.mouseCrash(e)
         }
+        e && this.end && this.mouseCrash(e)
+
         this.paint(this.points.map( p => [p[0] - x, p[1] - y]))
     }
     
